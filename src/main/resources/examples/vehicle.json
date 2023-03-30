@@ -1,0 +1,14 @@
+{
+	"id": 18,
+	"creationDate": "01/16/2023 - 10:40:45 MSK",
+	"name": "val",
+	"enginePower": "55.2",
+	"numberOfWheels": "8",
+	"coordinates": {
+		"id": 17,
+		"x": "6.6",
+		"y": "3.3"
+	},
+	"type": "PLANE",
+	"fuelType": "ALCOHOL"
+}

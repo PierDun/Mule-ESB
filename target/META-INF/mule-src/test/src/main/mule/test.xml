@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4ba4d5bb-a5b5-47a5-a0aa-5196a31aa6c1" >
+		<http:listener-connection host="0.0.0.0" port="8090" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="a7267f35-aa48-4956-bfe0-d798bdb2e0cf" basePath="/VehicleService/api/vehicles" >
+		<http:request-connection host="localhost" port="8080" />
+	</http:request-config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="04b014d5-f5f2-4235-8013-651e34a48ddb" >
+		<wsc:connection wsdlLocation="http://localhost:8085/ws/shop.wsdl?wsdl" service="SchemaPortService" port="SchemaPortSoap11" address="http://localhost:8085/ws">
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<flow name="getVehiclesWithType" doc:id="cc7eacb0-7f85-4fb4-99af-d8d05cd66b4d" >
+		<http:listener doc:name="Listener" doc:id="aa36d3e1-eab8-4613-aece-1ba760f3a648" config-ref="HTTP_Listener_config" path="/bus/vehicles">
+			<http:error-response statusCode="#[vars.httpStatus default 500]" >
+				<http:body ><![CDATA[#[output text/plain --- vars.errorMessage default error.description]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<http:request method="GET" doc:name="Request" doc:id="387f8ef1-3408-41d0-94a4-3ba89b69c426" config-ref="HTTP_Request_configuration" url="http://localhost:8080/VehicleService/api/vehicles" sendCorrelationId="NEVER">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	("name": attributes.queryParams.'name') if (attributes.queryParams.'name' != null),
+	("x1" : attributes.queryParams.'x1') if (attributes.queryParams.'x1' != null),
+	("x2" : attributes.queryParams.'x2') if (attributes.queryParams.'x2' != null),
+	("y1" : attributes.queryParams.'y1') if (attributes.queryParams.'y1' != null),
+	("y2" : attributes.queryParams.'y2') if (attributes.queryParams.'y2' != null),
+	("start-creation-date": attributes.queryParams.'start-creation-date') if (attributes.queryParams.'start-creation-date' != null),
+	("end-creation-date": attributes.queryParams.'end-creation-date') if (attributes.queryParams.'end-creation-date' != null),
+	("enginePower1": attributes.queryParams.'enginePower1') if (attributes.queryParams.'enginePower1' != null),
+	("enginePower2": attributes.queryParams.'enginePower2') if (attributes.queryParams.'enginePower2' != null),
+	("numberOfWheels1": attributes.queryParams.'numberOfWheels1') if (attributes.queryParams.'numberOfWheels1' != null),
+	("numberOfWheels2": attributes.queryParams.'numberOfWheels2') if (attributes.queryParams.'numberOfWheels2' != null),
+	("type" : attributes.queryParams.'type') if (attributes.queryParams.'type' != null),
+	("fuelType": attributes.queryParams.'fuelType')if (attributes.queryParams.'fuelType' != null),
+	("sortBy": attributes.queryParams.'sortBy') if (attributes.queryParams.'sortBy' != null),
+	("order": attributes.queryParams.'order') if (attributes.queryParams.'order' != null),
+	("selectedPage": attributes.queryParams.'selectedPage') if (attributes.queryParams.'selectedPage' != null),
+	("numberOfRecordsPerPage": attributes.queryParams.'numberOfRecordsPerPage') if (attributes.queryParams.'numberOfRecordsPerPage' != null)
+}]]]></http:query-params>
+		</http:request>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fe2dfcfc-2242-4e9c-8dd6-94f78d508b5e" type="ANY">
+				<set-variable value="400" doc:name="Set Variable" doc:id="b12505fa-c27a-42d5-9d0c-5aa90bd614df" variableName="httpStatus"/>
+				<set-variable value='Wrong type!' doc:name="Set Variable" doc:id="83e066ba-c711-4eab-9728-9a87a9f81b58" variableName="errorMessage"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="getVehicleWithID" doc:id="2a3fe415-0a56-4cc6-8c10-3db334f250c5" >
+		<http:listener doc:name="Listener" doc:id="21ba6596-d048-49e7-bfda-113808b11278" config-ref="HTTP_Listener_config" path="/bus/vehicles/{id}">
+			<http:response statusCode="#[vars.httpStatus default 200]">
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]" >
+				<http:body ><![CDATA[#[output text/plain --- vars.errorMessage default error.description]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:is-number numberType="LONG" doc:name="Is number" doc:id="555cb085-82ef-46f0-9e3c-314ff0e29b60" value="#[attributes.uriParams.id]" message="The following value can't be a number"/>
+		<http:request method="GET" doc:name="Request" doc:id="d98389ba-515a-4b58-908d-6f0fe6658029" url="http://localhost:8080/VehicleService/api/vehicles/{id}" config-ref="HTTP_Request_configuration">
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : attributes.uriParams.'id'
+}]]]></http:uri-params>
+			<http:response-validator >
+				<http:failure-status-code-validator values="400,404,500"/>
+			</http:response-validator>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="dd5af52e-30aa-47c1-9052-1a20553fab2e" message='#[write(payload, "application/json")]'/>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="61d8f10b-425c-4738-9e01-9216e15bc6cb" type="HTTP:NOT_FOUND">
+				<set-variable value="404" doc:name="Set Variable" doc:id="1b5b4a0e-5e11-4a76-8fca-14d0d3ec1b7d" variableName="httpStatus"/>
+				<set-variable value="Vehicle not found" doc:name="Set Variable" doc:id="3b2685cd-8257-4a71-8104-102ca34fcad6" variableName="errorMessage"/>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5fa32acc-a638-4d36-8674-846c17cb75f4" type="VALIDATION:INVALID_NUMBER">
+				<set-variable value="400" doc:name="Set Variable" doc:id="ee848bd7-9728-4cc6-b079-39a2383af182" variableName="httpStatus"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="ShopServiceSearcByType" doc:id="d7bb2870-9c0e-4a84-baca-516c7f205826" >
+		<http:listener doc:name="Listener" doc:id="22edd11c-91ec-4014-a6ff-5ed5a821f8dc" config-ref="HTTP_Listener_config" path="/shop/search/by-type/{type}">
+			<http:response >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]" >
+				<http:body ><![CDATA[#[output text/plain --- vars.errorMessage default error.description]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<ee:transform doc:name="Transform Message" doc:id="47642f54-1513-437a-a9b2-70303b798708" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://shop
+---
+{
+	ns0#SearchByTypeRequest: {
+		ns0#'type': attributes.uriParams.'type'
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume doc:name="Consume" doc:id="7b7037d3-9eab-48a5-b39a-c070215044a3" config-ref="Web_Service_Consumer_Config" operation="SearchByType"/>
+		<ee:transform doc:name="Transform Message" doc:id="78becace-c731-457f-a0ac-010ab0b1d680" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://shop
+---
+payload.body.ns0#SearchByTypeResponse.*ns0#vehicles]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d13ca03b-24fb-4815-a050-dd0754e3412e" type="WSC:SOAP_FAULT">
+				<set-variable value="400" doc:name="Set Variable" doc:id="60613e3a-cb00-4498-b463-b42e9e7f78e8" variableName="httpStatus"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="ShopAddWheels" doc:id="2e3bbf4a-91ed-4228-b4f1-80da9a212884" >
+		<http:listener doc:name="Listener" doc:id="0f639726-e937-4c68-a01e-85704b5d4056" config-ref="HTTP_Listener_config" path="/shop/add-wheels/{id}/{wheels}">
+			<http:response >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]" >
+				<http:body ><![CDATA[#[output text/plain --- vars.errorMessage default error.description]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<try doc:name="Try" doc:id="f27932fc-76d2-43ae-9b1a-550325249b1c" >
+			<validation:is-number doc:name="Is number" doc:id="1f3f794b-68b5-400f-ae9a-89fb47febcaa" value="#[attributes.uriParams.'id']" numberType="LONG" message='"id": the following value is not number' />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9f08a9d3-0370-4b55-b6e2-2599ccba59c3" type="VALIDATION:INVALID_NUMBER">
+					<set-variable value="400" doc:name="Set Variable" doc:id="48b5c982-2275-4eec-8046-266ec14b8128" variableName="httpStatus" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<try doc:name="Try" doc:id="b91295a2-e8fb-4174-93ed-0fea7f85bc82" >
+			<validation:is-number doc:name="Is number" doc:id="44545ee2-605c-4d29-98a4-daa0849de644" value="#[attributes.uriParams.'wheels']" numberType="INTEGER" message='"wheels": the following value is not number' />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="db4bbd1d-694e-42f7-b12a-52ba22864346" type="VALIDATION:INVALID_NUMBER">
+					<set-variable value="400" doc:name="Set Variable" doc:id="6360cc2a-a36e-47fb-86d1-8fcc4c8a78be" variableName="httpStatus" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Transform Message" doc:id="48d71ee0-9cf9-40ce-84ee-b89cd80b5b5f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://shop
+---
+{
+	ns0#AddWheelsRequest: {
+		ns0#'id': attributes.uriParams.'id',
+		ns0#'wheels': attributes.uriParams.'wheels'
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="AddWheels" doc:name="Consume" doc:id="8d06410f-7438-4d4e-b1ce-e987b5ecbb20" config-ref="Web_Service_Consumer_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="0799076d-e2ee-4680-84a3-5e4de6f8a185" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://shop
+---
+payload.body.ns0#AddWheelsResponse.ns0#vehicle]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="8b971a1c-e230-4f41-8878-1d343ea8ff69" type="WSC:SOAP_FAULT">
+				<set-variable value="404" doc:name="Set Variable" doc:id="9a67730b-2e65-4f42-ab21-a93cd28dcbec" variableName="httpStatus"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="Vehicles:Put" doc:id="4be892d5-0ca2-44f8-b673-d0b009cee177" >
+		<http:listener doc:name="Listener" doc:id="1948f47b-64dd-442c-af78-b32a3e202c2e" config-ref="HTTP_Listener_config" path="/bus/vehicles/{id}" allowedMethods="PUT">
+			<http:error-response statusCode="#[vars.httpStatus default 500]" >
+				<http:body ><![CDATA[#[output text/plain --- vars.errorMessage default error.description]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<set-payload value="#[message.payload]" doc:name="Set Payload" doc:id="08ec3a22-c8c9-42d8-9f90-09525f9b1b6a" />
+		<http:request method="PUT" doc:name="Request" doc:id="2535cce4-5d71-4077-a8f8-c7d745c83990" url="http://localhost:8080/VehicleService/api/vehicles/{id}">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : attributes.uriParams.'id'
+}]]]></http:uri-params>
+		</http:request>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="08aebb50-ca2c-4e9d-a713-436194fdc42c" type="HTTP:BAD_REQUEST">
+				<set-variable value="400" doc:name="Set Variable" doc:id="908a9252-1056-42e5-a97f-e48700794180" variableName="httpStatus"/>
+				<set-variable value="Wrong Vehicle" doc:name="Set Variable" doc:id="31e8a2fd-ad85-4660-8313-1c51e219212f" variableName="errorMessage"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

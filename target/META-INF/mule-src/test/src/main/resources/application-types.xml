@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="vehicle" format="json">
+      <types:shape format="weave" example="examples/vehicle.json"><![CDATA[%dw 2.0
+
+type vehicle = {|
+  id: Number {"typeId": "int"}, 
+  creationDate: String, 
+  name: String, 
+  enginePower: String, 
+  numberOfWheels: String, 
+  coordinates: {|
+    id: Number {"typeId": "int"}, 
+    x: String, 
+    y: String
+  |}, 
+  "type": String, 
+  fuelType: String
+|} {"example": "{\\\"id\\\":18,\\\"creationDate\\\":\\\"01\\/16\\/2023 - 10:40:45 MSK\\\",\\\"name\\\":\\\"val\\\",\\\"enginePower\\\":\\\"55.2\\\",\\\"numberOfWheels\\\":\\\"8\\\",\\\"coordinates\\\":{\\\"id\\\":17,\\\"x\\\":\\\"6.6\\\",\\\"y\\\":\\\"3.3\\\"},\\\"type\\\":\\\"PLANE\\\",\\\"fuelType\\\":\\\"ALCOHOL\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#78becace-c731-457f-a0ac-010ab0b1d680">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="vehicle"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#0799076d-e2ee-4680-84a3-5e4de6f8a185">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="vehicle"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
